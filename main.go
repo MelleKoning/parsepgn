@@ -29,17 +29,27 @@ func (pgnlinetype PgnLineType) String() string {
 	return [...]string{"Event", "Site", "Date", "Round", "White", "Black", "Result", "FEN", "PlyCount"}[pgnlinetype]
 }
 
-type PlyCountData struct {
+type PlyCountItem struct {
 	move  int
 	equal int
 	sideA int
 	sideB int
 }
 
+//GetNewPlyCountData returns a new object
+func GetNewPlyCountItem() *PlyCountItem {
+	return &PlyCountItem{
+		move:  0,
+		equal: 0,
+		sideA: 0,
+		sideB: 0,
+	}
+}
 func main() {
-	var plyCountData []PlyCountData
+	var plyCountData map[int]PlyCountItem
+	plyCountData = make(map[int]PlyCountItem)
 	defaultp := true
-
+	numberofresults := 0
 	file, err := os.Open("t40games.pgn")
 	if err != nil {
 		fmt.Printf("error occured %v", err)
@@ -47,7 +57,7 @@ func main() {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
-	var plyCountItem PlyCountData
+	var plyCountItem PlyCountItem
 	for scanner.Scan() { // internally, it advances token based on sperator
 
 		line := scanner.Text()
@@ -60,15 +70,13 @@ func main() {
 			} else {
 				defaultp = true
 			}
+			plyCountItem = *GetNewPlyCountItem()
 		}
 		// do not have to check this side...
 		//if pgnlinetype == Black {
-		if pgnlinetype == PlyCount {
-			// search holder or create new holder
-			plyCountItem = GetPlyCountItem(&plyCountData, plyCountItem, line)
-		}
 		if pgnlinetype == Result {
-			fmt.Println(line) // token in unicode-char
+			numberofresults++
+			fmt.Println(numberofresults) // token in unicode-char
 			switch line {
 
 			case "[Result \"1-0\"]":
@@ -91,41 +99,54 @@ func main() {
 				{
 					plyCountItem.equal++
 				}
+			default:
+				fmt.Println(line)
 			}
 		}
-		fmt.Println("new or updated item:")
-		fmt.Println(plyCountItem)
-		fmt.Println("...")
-		fmt.Println(plyCountData)
-		fmt.Println("---")
+		if pgnlinetype == PlyCount {
+			// search holder or create new holder
+			plyCountItem, plyCountData = AddPlyCountItem(plyCountData, plyCountItem, line)
+			//fmt.Println("new or updated item:")
+			//fmt.Println(plyCountItem)
+		}
+
+		//fmt.Print(".")
 
 	}
-	fmt.Println("Final results:")
-	fmt.Println(plyCountData)
+	//fmt.Println("Final results:")
+	//fmt.Println(plyCountData)
+	WriteCsv(plyCountData)
+}
+
+func WriteCsv(plyCountData map[int]PlyCountItem) {
+	for i := 0; i < 200; i++ {
+		item, exists := plyCountData[i]
+		if !exists {
+			fmt.Println(i, ",0,0,0")
+		} else {
+			fmt.Printf("%v,%v,%v,%v", item.move, item.equal, item.sideA, item.sideB)
+			fmt.Println()
+		}
+	}
+
 }
 
 // getPlyCountItem should return the existing item based on movecount or return a new one
 // we are adding a new item if needed within the function therefore pass address of PlyCountdata
-func GetPlyCountItem(plyCountData *[]PlyCountData, plyCountItem PlyCountData, plycountline string) PlyCountData {
-	plycountfound := GetPlyCount(plycountline)
+func AddPlyCountItem(plyCountData map[int]PlyCountItem, plyCountItem PlyCountItem, plycountline string) (PlyCountItem, map[int]PlyCountItem) {
+	plycountnumber := GetPlyCount(plycountline)
 	// search for correct item
-	for _, pc := range *plyCountData {
-		if pc.move == plycountfound {
-			// update data from given plyCountItem
-			pc.equal = plyCountItem.equal
-			pc.sideA = plyCountItem.sideA
-			pc.sideB = plyCountItem.sideB
-			return pc
-		}
+	pcItem, exists := plyCountData[plycountnumber]
+	if !exists {
+		pcItem = *GetNewPlyCountItem()
 	}
-	newPc := &PlyCountData{
-		move:  plycountfound,
-		equal: plyCountItem.equal,
-		sideA: plyCountItem.sideA,
-		sideB: plyCountItem.sideB,
-	}
-	*plyCountData = append(*plyCountData, *newPc)
-	return *newPc
+	pcItem.move = plycountnumber
+	pcItem.equal = pcItem.equal + plyCountItem.equal
+	pcItem.sideA = pcItem.sideA + plyCountItem.sideA
+	pcItem.sideB = pcItem.sideB + plyCountItem.sideB
+
+	plyCountData[plycountnumber] = pcItem
+	return pcItem, plyCountData
 }
 
 // GetPlyCount returns the number from a string looking like [whatever "88"]
