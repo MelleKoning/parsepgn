@@ -24,7 +24,7 @@
             "args": ["-playername=889"]
         },
         {
-            "name": "Test 42603",
+            "name": "Test 42603 100 games",
             "type": "go",
             "request": "launch",
             "mode": "auto",
@@ -32,6 +32,16 @@
             "env": {},
             "args": ["-playername=42603",
             "-pgnfile=42603.pgn"]
+        },
+        {
+            "name": "Test 1000 games",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {},
+            "args": ["-playername=42547",
+            "-pgnfile=lc0.net.42547vsSF.pgn"]
         }
 
         
