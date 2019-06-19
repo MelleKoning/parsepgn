@@ -3,6 +3,7 @@ package main
 import (
 	//"io/ioutil"
 	"bufio"
+	"flag"
 	"fmt"
 
 	//"log"
@@ -46,9 +47,14 @@ func GetNewPlyCountItem() *PlyCountItem {
 	}
 }
 func main() {
+	var playername string
+	flag.StringVar(&playername, "playername", "", "The name of player-A to scan for, example 'lc0.pr88.net4500'")
+	flag.Parse()
+
+	var maxPlyFound int
 	var plyCountData map[int]PlyCountItem
 	plyCountData = make(map[int]PlyCountItem)
-	defaultp := true
+	scanforplayer := true
 	numberofresults := 0
 	file, err := os.Open("t40games.pgn")
 	if err != nil {
@@ -65,10 +71,10 @@ func main() {
 		//fmt.Println(line) // token in unicode-char
 
 		if pgnlinetype == White {
-			if strings.Index(line, "889") != -1 {
-				defaultp = false
+			if strings.Index(line, playername) != -1 {
+				scanforplayer = true
 			} else {
-				defaultp = true
+				scanforplayer = false
 			}
 			plyCountItem = *GetNewPlyCountItem()
 		}
@@ -76,12 +82,12 @@ func main() {
 		//if pgnlinetype == Black {
 		if pgnlinetype == Result {
 			numberofresults++
-			fmt.Println(numberofresults) // token in unicode-char
+			fmt.Print(".")
 			switch line {
 
 			case "[Result \"1-0\"]":
 				{
-					if defaultp {
+					if scanforplayer {
 						plyCountItem.sideA++
 					} else {
 						plyCountItem.sideB++
@@ -89,7 +95,7 @@ func main() {
 				}
 			case "[Result \"0-1\"]":
 				{
-					if defaultp {
+					if scanforplayer {
 						plyCountItem.sideB++
 					} else {
 						plyCountItem.sideA++
@@ -100,12 +106,16 @@ func main() {
 					plyCountItem.equal++
 				}
 			default:
-				fmt.Println(line)
+				//fmt.Println(line) // other format of Result??
 			}
 		}
 		if pgnlinetype == PlyCount {
 			// search holder or create new holder
-			plyCountItem, plyCountData = AddPlyCountItem(plyCountData, plyCountItem, line)
+			var plyCountNumber int
+			plyCountNumber, plyCountItem, plyCountData = AddPlyCountItem(plyCountData, plyCountItem, line)
+			if plyCountNumber > maxPlyFound {
+				maxPlyFound = plyCountNumber
+			}
 			//fmt.Println("new or updated item:")
 			//fmt.Println(plyCountItem)
 		}
@@ -115,11 +125,16 @@ func main() {
 	}
 	//fmt.Println("Final results:")
 	//fmt.Println(plyCountData)
-	WriteCsv(plyCountData)
+	WriteCsv(numberofresults, plyCountData, maxPlyFound)
 }
 
-func WriteCsv(plyCountData map[int]PlyCountItem) {
-	for i := 0; i < 200; i++ {
+// WriteCsv just prints to output a CSV compatible format of moves
+func WriteCsv(numberofresults int, plyCountData map[int]PlyCountItem, maxPlyFound int) {
+	fmt.Println()
+	fmt.Printf("%v games processed\n", numberofresults)
+	fmt.Printf("longest game took %v ply\n", maxPlyFound)
+	fmt.Println("ply, wonA, wonB, draw")
+	for i := 1; i <= maxPlyFound; i++ {
 		item, exists := plyCountData[i]
 		if !exists {
 			fmt.Println(i, ",0,0,0")
@@ -133,7 +148,7 @@ func WriteCsv(plyCountData map[int]PlyCountItem) {
 
 // getPlyCountItem should return the existing item based on movecount or return a new one
 // we are adding a new item if needed within the function therefore pass address of PlyCountdata
-func AddPlyCountItem(plyCountData map[int]PlyCountItem, plyCountItem PlyCountItem, plycountline string) (PlyCountItem, map[int]PlyCountItem) {
+func AddPlyCountItem(plyCountData map[int]PlyCountItem, plyCountItem PlyCountItem, plycountline string) (int, PlyCountItem, map[int]PlyCountItem) {
 	plycountnumber := GetPlyCount(plycountline)
 	// search for correct item
 	pcItem, exists := plyCountData[plycountnumber]
@@ -146,7 +161,7 @@ func AddPlyCountItem(plyCountData map[int]PlyCountItem, plyCountItem PlyCountIte
 	pcItem.sideB = pcItem.sideB + plyCountItem.sideB
 
 	plyCountData[plycountnumber] = pcItem
-	return pcItem, plyCountData
+	return plycountnumber, pcItem, plyCountData
 }
 
 // GetPlyCount returns the number from a string looking like [whatever "88"]
