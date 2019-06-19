@@ -25,6 +25,9 @@ There were also 6 games ending at ply 48, those were 1 win for player A, 2 wins 
 Note:from this out you can not see if player A or B played white or black; this is because some games can be adjudicated as win, loss or draw by
 the adjudicator (Arena or Cutechess) because of 3 fold draw scoring or adjudicating for a certain amount of moves with CP point difference.
 
+## Usage
 
+Example commandline:
+./main -playername="lc0.pr889" -pgnfile="t40games.pgn"
 
 

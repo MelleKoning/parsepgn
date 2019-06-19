@@ -11,7 +11,29 @@
             "mode": "auto",
             "program": "${fileDirname}",
             "env": {},
+            "args": ["-playername=889",
+            "-pgnfile=t40games.pgn"]
+        },
+        {
+            "name": "Test no args",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {},
             "args": ["-playername=889"]
+        },
+        {
+            "name": "Test 42603",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {},
+            "args": ["-playername=42603",
+            "-pgnfile=42603.pgn"]
         }
+
+        
     ]
 }

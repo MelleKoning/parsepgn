@@ -48,15 +48,29 @@ func GetNewPlyCountItem() *PlyCountItem {
 }
 func main() {
 	var playername string
-	flag.StringVar(&playername, "playername", "", "The name of player-A to scan for, example 'lc0.pr88.net4500'")
+	var pgnfile string
+	flag.StringVar(&playername, "playername", "notset", "The name of player-A to scan for, example 'lc0.pr88.net4500'")
+	flag.StringVar(&pgnfile, "pgnfile", "notset", "The file.pgn to parse")
 	flag.Parse()
+	if f := flag.CommandLine.Lookup("playername"); f != nil {
+		if f.Value.String() == "notset" {
+			fmt.Printf("playername not set\n")
+			os.Exit(1)
+		}
+	}
+	if f := flag.CommandLine.Lookup("pgnfile"); f != nil {
+		if f.Value.String() == "notset" {
+			fmt.Printf("pgnfile not set\n")
+			os.Exit(1)
+		}
+	}
 
 	var maxPlyFound int
 	var plyCountData map[int]PlyCountItem
 	plyCountData = make(map[int]PlyCountItem)
 	scanforplayer := true
 	numberofresults := 0
-	file, err := os.Open("t40games.pgn")
+	file, err := os.Open(pgnfile)
 	if err != nil {
 		fmt.Printf("error occured %v", err)
 	}
