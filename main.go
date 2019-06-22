@@ -159,9 +159,9 @@ func WriteCsv(numberofresults int, plyCountData map[int]PlyCountItem, maxPlyFoun
 	}
 	fmt.Println("per ply-group 1-5, 6-10 etc.")
 	fmt.Println("ply, wonA, wonB, draw")
-	for i := 1; i <= maxPlyFound; i += 5 {
+	for i := 1; i < maxPlyFound; i += 5 {
 		var equaltotal, sideAtotal, sideBtotal int = 0, 0, 0
-		for j := i; j <= i+5; j++ {
+		for j := i; j < i+4; j++ {
 			item, exists := plyCountData[j]
 			if exists {
 				equaltotal += item.equal
@@ -169,7 +169,7 @@ func WriteCsv(numberofresults int, plyCountData map[int]PlyCountItem, maxPlyFoun
 				sideBtotal += item.sideB
 			}
 		}
-		fmt.Printf("%v-%v,%v,%v,%v", i, i+5, equaltotal, sideAtotal, sideBtotal)
+		fmt.Printf("%v-%v,%v,%v,%v", i, i+4, equaltotal, sideAtotal, sideBtotal)
 		fmt.Println()
 	}
 }

@@ -42,6 +42,16 @@
             "env": {},
             "args": ["-playername=42547",
             "-pgnfile=lc0.net.42547vsSF.pgn"]
+        },
+        {
+            "name": "T30vsT40",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${fileDirname}",
+            "env": {},
+            "args": ["-playername=42622",
+            "-pgnfile=20190621T40vsT30Default.pgn"]
         }
 
         
